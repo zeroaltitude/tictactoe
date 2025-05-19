@@ -9,6 +9,8 @@ class boardTree {
       return 0
     }
     this.children=[]
+    //child 1 is the child's row, child 2 is the child's column
+    //i dont want to rename them because i think these names are funnier
     for (var child1=0;child1<3;child1++) {
       var temp=[]
       for (var child2=0;child2<3;child2++) {
