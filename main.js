@@ -46,19 +46,10 @@ function checkWin(toCheck) {
 var board=new boardTree(null,dimension,-1,-1)
 currentBoard=board
 
-/*currentBoard.children[0][0].children[1][1]="X"
-currentBoard.children[0][0].children[2][2]="X"
-currentBoard.children[1][1].children[0][0].children[1][1]="X"
-currentBoard.children[1][1].children[0][0].children[2][2]="X"
-currentBoard.children[0][0].children[0][0].children[1][1]="X"
-currentBoard.children[0][0].children[0][0].children[2][2]="X"
-/*currentBoard.children[0][0].children[0][0].children[1][1]="X"
-currentBoard.children[0][0].children[0][0].children[2][2]="X"*/
-
 while (true) {
   while (typeof currentBoard.children=="object") {
     while (true) {
-      input=prompt(`${currentPlayer} move: `)
+      input=prompt(`(depth: ${currentBoard.depth}) ${currentPlayer} move: `)
       try {
         currentBoard.children[input[0]][input[1]].children[0][0]
         break
@@ -74,7 +65,6 @@ while (true) {
   windepth=0
   coords=[]
   while (checkWin(currentBoard)) {
-    alert(windepth)
     alert(`${currentPlayer} won!`)
     coords=coords.concat([currentBoard.row,currentBoard.column])
     currentBoard=currentBoard.parent
@@ -96,14 +86,10 @@ while (true) {
     //route=route.slice(0,route.length-(2*(windepth+1))).slice(0,route.slice(0,route.length-(2*(windepth+1))).length-(route.length-(2*(dimension-1)))).concat(route.slice(route.length-(2*(windepth+1))))
     route=route.slice(0,2*(dimension-1))
   }
-  alert(route)
   for (index=0;index<route.length;index+=2) {
-    alert(`${currentBoard.depth}, ${currentBoard.row}, ${currentBoard.column}`)
     if (typeof currentBoard.children[route[index]][route[index+1]]!="object") {
-      alert(currentBoard.children[route[index]][route[index+1]])
-      alert("we in dis hoe")
       while (true) {
-        input=prompt(`weird ${currentPlayer} move: `)
+        input=prompt(`(depth: ${currentBoard.depth}) ${currentPlayer} move: `)
         try {
           currentBoard.children[0][0]
           break
