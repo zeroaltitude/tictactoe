@@ -28,13 +28,13 @@ class boardTree {
   }
 }
 
-player1='X'
-player2='O'
+const player1='X'
+const player2='O'
 const dimension=3
 currentPlayer=player1
 
-winconditions = [[[0, 0], [0, 1], [0, 2]], [[1, 0], [1, 1], [1, 2]], [[2, 0], [2, 1], [2, 2]], [[0, 0], [1, 0], [2, 0]], [[0, 1], [1, 1], [2, 1]], [[0, 2], [1, 2], [2, 2]], [[0, 2], [1, 1], [2, 0]], [[0, 0], [1, 1], [2, 2]]]
 function checkWin(toCheck) {
+  const winconditions = [[[0, 0], [0, 1], [0, 2]], [[1, 0], [1, 1], [1, 2]], [[2, 0], [2, 1], [2, 2]], [[0, 0], [1, 0], [2, 0]], [[0, 1], [1, 1], [2, 1]], [[0, 2], [1, 2], [2, 2]], [[0, 2], [1, 1], [2, 0]], [[0, 0], [1, 1], [2, 2]]]
   for (i=0; i<winconditions.length; i++) {
     if (toCheck.children[winconditions[i][0][0]][winconditions[i][0][1]]==toCheck.children[winconditions[i][1][0]][winconditions[i][1][1]]&&toCheck.children[winconditions[i][1][0]][winconditions[i][1][1]]==toCheck.children[winconditions[i][2][0]][winconditions[i][2][1]]&&toCheck.children[winconditions[i][0][0]][winconditions[i][0][1]]!=" ") {
       return true;
@@ -46,14 +46,6 @@ function checkWin(toCheck) {
 var board=new boardTree(null,dimension,-1,-1)
 currentBoard=board
 
-/*currentBoard.children[0][0].children[1][1]="X"
-currentBoard.children[0][0].children[2][2]="X"
-currentBoard.children[1][1].children[0][0].children[1][1]="X"
-currentBoard.children[1][1].children[0][0].children[2][2]="X"
-currentBoard.children[0][0].children[0][0].children[1][1]="X"
-currentBoard.children[0][0].children[0][0].children[2][2]="X"
-/*currentBoard.children[0][0].children[0][0].children[1][1]="X"
-currentBoard.children[0][0].children[0][0].children[2][2]="X"*/
 
 while (true) {
   while (typeof currentBoard.children=="object") {
