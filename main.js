@@ -9,8 +9,6 @@ class boardTree {
       return 0
     }
     this.children=[]
-    //child 1 is the child's row, child 2 is the child's column
-    //i dont want to rename them because i think these names are funnier
     for (var child1=0;child1<3;child1++) {
       var temp=[]
       for (var child2=0;child2<3;child2++) {
@@ -48,10 +46,19 @@ function checkWin(toCheck) {
 var board=new boardTree(null,dimension,-1,-1)
 currentBoard=board
 
+/*currentBoard.children[0][0].children[1][1]="X"
+currentBoard.children[0][0].children[2][2]="X"
+currentBoard.children[1][1].children[0][0].children[1][1]="X"
+currentBoard.children[1][1].children[0][0].children[2][2]="X"
+currentBoard.children[0][0].children[0][0].children[1][1]="X"
+currentBoard.children[0][0].children[0][0].children[2][2]="X"
+/*currentBoard.children[0][0].children[0][0].children[1][1]="X"
+currentBoard.children[0][0].children[0][0].children[2][2]="X"*/
+
 while (true) {
   while (typeof currentBoard.children=="object") {
     while (true) {
-      input=prompt(`(depth: ${currentBoard.depth}) ${currentPlayer} move: `)
+      input=prompt(`${currentPlayer} move: `)
       try {
         currentBoard.children[input[0]][input[1]].children[0][0]
         break
@@ -67,6 +74,10 @@ while (true) {
   windepth=0
   coords=[]
   while (checkWin(currentBoard)) {
+    if (currentBoard.depth==-1) {
+        prompt(`${currentPlayer} WON! (fully)`)
+    }
+    alert(windepth)
     alert(`${currentPlayer} won!`)
     coords=coords.concat([currentBoard.row,currentBoard.column])
     currentBoard=currentBoard.parent
@@ -91,7 +102,7 @@ while (true) {
   for (index=0;index<route.length;index+=2) {
     if (typeof currentBoard.children[route[index]][route[index+1]]!="object") {
       while (true) {
-        input=prompt(`(depth: ${currentBoard.depth}) ${currentPlayer} move: `)
+        input=prompt(`${currentPlayer} move: `)
         try {
           currentBoard.children[0][0]
           break
