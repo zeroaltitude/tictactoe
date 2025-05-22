@@ -1,10 +1,15 @@
+import _ from "lodash";
+import {useState} from "react";
+
 export default function Board(props) {
     const rows=[0,1,2];
     const columns=[0,1,2];
+    const [currentRoute, setCurrentRoute] = useState(props.treeNode.getFullRoute([props.row,props.column]));
     return (
         <div id={"board-" + props.depth + "-" + props.row + "-" + props.column} style={{
             padding: `${(props.depth+1)*25}px`,
-            backgroundColor: "#ddd"
+            backgroundColor: "#ddd",
+            border: _.isEqual(props.activeBoard,currentRoute.slice(0,currentRoute.length-2*(props.winDepth+1)))? "1px solid green":""
         }}>
             <table>
                 {rows.map((row)=>(
@@ -14,12 +19,12 @@ export default function Board(props) {
                                 borderBottom: row<2? `${props.depth*3+1}px solid black`:'',
                                 borderLeft: column>0? `${props.depth*3+1}px solid black`:''
                              }}>
-                                {props.depth>0 && (
-                                    <Board depth={props.depth-1} row={row} column={column} />
+                                {props.depth>1 && (
+                                    <Board depth={props.depth-1} row={row} column={column} handleMove={props.handleMove} treeNode={props.treeNode.children[row][column]} activeBoard={props.activeBoard} winDepth={props.winDepth} />
                                 )}
-                                {props.depth===0 && (
+                                {props.depth===1 && (
                                     <button onClick={(event) => {
-                                            event.target.innerHTML = "X"
+                                            props.handleMove(event,props.treeNode,row,column)
                                         }
                                     } 
                                     style={{
