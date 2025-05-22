@@ -117,7 +117,7 @@ export default function App() {
     setCurrentPlayer(players[(players.indexOf(currentPlayer)+1)%2]);
     setPreviousMove([treeNode,row,column,winDepth]);
     setActiveBoard(calculateShift([treeNode,row,column,winDepth]));
-  },[currentPlayer, boardTree, previousMove]);
+  },[currentPlayer, boardTree, previousMove, players]);
 
   return (
     <div className="App">
