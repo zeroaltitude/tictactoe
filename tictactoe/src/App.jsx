@@ -89,6 +89,7 @@ export default function App() {
   const [winDepth, setWinDepth] = useState(0);
 
   const handleMove = useCallback((event,treeNode,row,column) => {
+    //treeNode is always the parent board of the move played, not the move itself
     let winDepth=0;
     if (typeof(treeNode.children[row][column])!="object") {
       alert("brotjer its takenm do you have eyeys");
@@ -100,10 +101,22 @@ export default function App() {
     }
     treeNode.children[row][column]=currentPlayer;
     event.target.innerHTML=currentPlayer;
+
+    currentBoard=treeNode;
+    coords=[];
+    while (checkWin(currentBoard)) {
+      alert(`${currentPlayer} won!`)
+      coords=coords.concat([currentBoard.row,currentBoard.column
+      currentBoard=currentBoard.parent
+      //this line might change according to "new standards":
+      currentBoard.children[coords[0]][coords[1]]=currentPlayer
+      windepth++
+    }
+
+    setWinDepth(winDepth);
     setCurrentPlayer(players[(players.indexOf(currentPlayer)+1)%2]);
     setPreviousMove([treeNode,row,column,winDepth]);
     setActiveBoard(calculateShift([treeNode,row,column,winDepth]));
-    setWinDepth(winDepth);
   },[currentPlayer, boardTree, previousMove]);
 
   return (
