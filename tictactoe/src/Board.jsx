@@ -8,8 +8,8 @@ export default function Board(props) {
     return (
         <div id={"board-" + props.depth + "-" + props.row + "-" + props.column} style={{
             padding: `${(props.depth+1)*25}px`,
-            backgroundColor: "#ddd",
-            border: _.isEqual(props.activeBoard,currentRoute.slice(0,currentRoute.length-2*(props.winDepth+1)))? "1px solid green":""
+            border: _.isEqual(props.activeBoard,currentRoute.slice(0,currentRoute.length-2*(props.winDepth+1)))? "1px solid green":"",
+            backgroundColor: _.isEqual(props.activeBoard,currentRoute.slice(0,currentRoute.length-2*(props.winDepth+1)))? "green":"#ddd"
         }}>
             <table>
                 {rows.map((row)=>(
