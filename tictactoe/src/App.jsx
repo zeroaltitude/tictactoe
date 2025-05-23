@@ -44,11 +44,12 @@ function checkWin(toCheck) {
 }
 
 function calculateShift(previousMove) {
-  const route=previousMove[0].getFullRoute([previousMove[1],previousMove[2]])
-  const windepth=previousMove[3];
-  const suffix=route.slice((windepth+2)*2);
-  const prefix=route.slice(0,(windepth+1)*2);
-  return prefix.concat(suffix);
+  const route=previousMove[0].getFullRoute([previousMove[1],previousMove[2]]);
+  const winDepth=previousMove[3];
+  const length=route.length;
+  const pre=route.splice(0,length-2*(winDepth+2));
+  const suf=route.splice(2);
+  return pre.concat(suf);
 }
 
 function playingOnCorrectBoard(previousMove, treeNode, row, column) {
@@ -57,8 +58,7 @@ function playingOnCorrectBoard(previousMove, treeNode, row, column) {
   }
   const route=calculateShift(previousMove);
   const currentRoute=treeNode.getFullRoute([row,column]);
-  console.log(route,currentRoute.slice(0,currentRoute.length-2));
-  if (_.isEqual(currentRoute.slice(0,currentRoute.length-2*(previousMove[3]+1)),route)) {
+  if (_.isEqual(currentRoute.slice(0,currentRoute.length-2),route)) {
     return true;
   }
   return false;
@@ -102,15 +102,15 @@ export default function App() {
     treeNode.children[row][column]=currentPlayer;
     event.target.innerHTML=currentPlayer;
 
-    currentBoard=treeNode;
-    coords=[];
+    let currentBoard=treeNode;
+    let coords=[];
     while (checkWin(currentBoard)) {
       alert(`${currentPlayer} won!`)
-      coords=coords.concat([currentBoard.row,currentBoard.column
+      coords=coords.concat([currentBoard.row,currentBoard.column])
       currentBoard=currentBoard.parent
-      //this line might change according to "new standards":
-      currentBoard.children[coords[0]][coords[1]]=currentPlayer
-      windepth++
+      //this line will change according to "new standards":
+      //currentBoard.children[coords[0]][coords[1]]=currentPlayer
+      winDepth++
     }
 
     setWinDepth(winDepth);
