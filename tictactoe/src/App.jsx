@@ -41,6 +41,17 @@ class BoardTree {
     }
     return start
   }
+  isAnyParentWon() {
+    if (this.wonBy!='') {
+      return true;
+    }
+    else if (this.parent==null) {
+      return false;
+    }
+    else {
+      return this.parent.isAnyParentWon();
+    }
+  }
   activeCheck(previousMove) {
     console.log(this)
     if (previousMove.length==0 || this.parent==null) {
@@ -76,11 +87,31 @@ class BoardTree {
     //boardPlayerIsSentTo, and subsequently boardCheck, should be depth 1
     console.log("taken check:")
     const boardPlayerIsSentTo=baseBoard.navigateTo(shiftedRoute);
+    console.log("shifted route:")
+    console.log(shiftedRoute)
     let boardCheck=boardPlayerIsSentTo;
+    let highestBoardCheckParent=boardCheck.parent;
+    let highestThisParent=this.parent;
+    console.log("boardcheck, this:")
     console.log(boardCheck)
-    console.log((boardCheck.wonBy!=''))
-    console.log(this.parent==boardCheck.parent)
-    if (boardCheck.wonBy!='' && this.parent==boardCheck.parent) {
+    console.log(this)
+    console.log("parents before maniputlation:")
+    console.log(highestBoardCheckParent)
+    console.log(highestThisParent)
+    while (highestBoardCheckParent.wonBy!='') {
+      highestBoardCheckParent=highestBoardCheckParent.parent;
+      if (highestThisParent.depth<=highestThisParent) {
+        highestThisParent=highestThisParent.parent;
+      }
+    }
+    console.log("highest parent check and highest this parent")
+    console.log(highestBoardCheckParent)
+    console.log(highestThisParent)
+    console.log("boardchekc and conditions:")
+    console.log(boardCheck)
+    console.log(boardCheck.isAnyParentWon())
+    console.log(highestBoardCheckParent==highestThisParent)
+    if (boardCheck.isAnyParentWon() && highestBoardCheckParent==highestThisParent) {
       console.log("works")
       this.isActive=true;
       return true;
@@ -186,8 +217,6 @@ export default function App() {
     while (checkWin(currentBoard)) {
       alert(`${currentPlayer} won!`);
       coords=[currentBoard.row,currentBoard.column];
-      console.log("coords:")
-      console.log(coords)
       currentBoard=currentBoard.parent;
       //this line has changed according to "new standards":
       currentBoard.children[coords[0]][coords[1]].wonBy=currentPlayer;
