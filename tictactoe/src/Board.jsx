@@ -1,15 +1,16 @@
-import _ from "lodash";
-import {useState} from "react";
-
 export default function Board(props) {
     const rows=[0,1,2];
     const columns=[0,1,2];
-    const [currentRoute, setCurrentRoute] = useState(props.treeNode.getFullRoute([props.row,props.column]));
+    let wonByFlag=false;
+    const boardActiveFlag=(props.treeNode.activeCheck(props.previousMove)&&props.depth==1);
+    if (props.treeNode.wonBy!='') {
+        wonByFlag=true;
+    }
     return (
         <div id={"board-" + props.depth + "-" + props.row + "-" + props.column} style={{
             padding: `${(props.depth+1)*25}px`,
-            border: _.isEqual(props.activeBoard,currentRoute.slice(0,currentRoute.length-2))? "1px solid green":"",
-            backgroundColor: _.isEqual(props.activeBoard,currentRoute.slice(0,currentRoute.length-2))? "green":"#ddd"
+            border: boardActiveFlag? "1px solid green":"",
+            backgroundColor: boardActiveFlag? "green":"#ddd"
         }}>
             <table>
                 {rows.map((row)=>(
@@ -20,7 +21,7 @@ export default function Board(props) {
                                 borderLeft: column>0? `${props.depth*3+1}px solid black`:''
                              }}>
                                 {props.depth>1 && (
-                                    <Board depth={props.depth-1} row={row} column={column} handleMove={props.handleMove} treeNode={props.treeNode.children[row][column]} activeBoard={props.activeBoard} winDepth={props.winDepth} />
+                                    <Board depth={props.depth-1} row={row} column={column} handleMove={props.handleMove} treeNode={props.treeNode.children[row][column]} activeBoard={props.activeBoard} winDepth={props.winDepth} previousMove={props.previousMove} />
                                 )}
                                 {props.depth===1 && (
                                     <button onClick={(event) => {

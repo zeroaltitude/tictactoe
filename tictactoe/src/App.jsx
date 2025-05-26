@@ -53,22 +53,15 @@ class BoardTree {
     }
   }
   activeCheck(previousMove) {
-    console.log(this)
     if (previousMove.length==0 || this.parent==null) {
       this.isActive=true;
       return true;
     }
     if (this.wonBy!='') {
-      console.log("failed won check:")
-      console.log(this)
       this.isActive=false;
       return false;
     }
-    console.log("running parent check:")
-    console.log(this.parent)
     if (!this.parent.activeCheck(previousMove)) {
-      console.log("failed parent check:")
-      console.log(this)
       this.isActive=false;
       return false;
     }
@@ -79,40 +72,22 @@ class BoardTree {
       baseBoard=baseBoard.parent;
     }
     //baseBoard is top layer board
-    console.log("shifted check:")
     if (this.row==shiftedRoute[shiftedRoute.length-((this.depth)*2)] && this.column==shiftedRoute[shiftedRoute.length-(((this.depth)*2))+1]) {
       this.isActive=true;
       return true;
     }
     //boardPlayerIsSentTo, and subsequently boardCheck, should be depth 1
-    console.log("taken check:")
     const boardPlayerIsSentTo=baseBoard.navigateTo(shiftedRoute);
-    console.log("shifted route:")
-    console.log(shiftedRoute)
     let boardCheck=boardPlayerIsSentTo;
     let highestBoardCheckParent=boardCheck.parent;
     let highestThisParent=this.parent;
-    console.log("boardcheck, this:")
-    console.log(boardCheck)
-    console.log(this)
-    console.log("parents before maniputlation:")
-    console.log(highestBoardCheckParent)
-    console.log(highestThisParent)
     while (highestBoardCheckParent.wonBy!='') {
       highestBoardCheckParent=highestBoardCheckParent.parent;
       if (highestThisParent.depth<=highestThisParent) {
         highestThisParent=highestThisParent.parent;
       }
     }
-    console.log("highest parent check and highest this parent")
-    console.log(highestBoardCheckParent)
-    console.log(highestThisParent)
-    console.log("boardchekc and conditions:")
-    console.log(boardCheck)
-    console.log(boardCheck.isAnyParentWon())
-    console.log(highestBoardCheckParent==highestThisParent)
     if (boardCheck.isAnyParentWon() && highestBoardCheckParent==highestThisParent) {
-      console.log("works")
       this.isActive=true;
       return true;
     }
@@ -138,54 +113,6 @@ function calculateShift(previousMove) {
   return pre.concat(suf);
 }
 
-function playingOnCorrectBoard(previousMove,treeNode,row,column,boardTree) {
-  if (previousMove.length==0) {
-    return true;
-  }
-  const route=calculateShift(previousMove);
-  const unshiftedRoute=previousMove[0].getFullRoute([previousMove[1],previousMove[2]])
-  const currentRoute=treeNode.getFullRoute([row,column]);
-  const currentShifted=currentRoute.slice(0,currentRoute.length-2);
-  let finalShifted=currentShifted;
-  let currentBoard=boardTree;
-  let finalRoute=route;
-  console.log(currentRoute+"b")
-  for (let boardIndex=0;boardIndex<currentRoute.length;boardIndex+=2) {
-    console.log(currentBoard)
-    console.log(typeof(currentBoard.children[unshiftedRoute[boardIndex]][unshiftedRoute[boardIndex+1]]), currentBoard.children[unshiftedRoute[boardIndex]][unshiftedRoute[boardIndex+1]].wonBy+boardIndex)
-    if (typeof(currentBoard.children[unshiftedRoute[boardIndex]][unshiftedRoute[boardIndex+1]])!="object" || currentBoard.children[unshiftedRoute[boardIndex]][unshiftedRoute[boardIndex+1]].wonBy!='') {
-      console.log('i ran'+boardIndex)
-      let temp=finalShifted.splice(0,boardIndex);
-      let temp2=finalRoute.splice(0,boardIndex);
-      temp=temp.concat([9,9]);
-      temp2=temp2.concat([9,9]);
-      finalShifted=temp.concat(finalShifted.splice(2));
-      finalRoute=temp2.concat(finalRoute.splice(2));
-    }
-    currentBoard=currentBoard.children[unshiftedRoute[boardIndex]][unshiftedRoute[boardIndex+1]];
-  }
-  console.log(finalShifted,finalRoute);
-  if (_.isEqual(finalShifted,finalRoute)) {
-    return true;
-  }
-  return false;
-  //[2,2,1,1,2,1]
-  //windepth=0
-  //[_,_,2,2,2,1]
-  //windepth=1
-  //[_,_,2,2,1,1]
-  // step 1
-  // grab (windepth+1)*2 leading elements as A
-  // windepth=0 [2, 2]
-  // windepth=1 [2, 2, 1, 1]
-  // grab the last route_len - (windepth + 2) * 2
-  // windepth=0 [2, 1]
-  // windepth=1 []
-  // jam those together
-  // windepth=0 [2, 2, 2, 1]
-  // windepth=1 [2, 2, 1, 1]
-}
-
 export default function App() {
   //'treeNode' is the board at which the click event happens
   const dimension=3;
@@ -204,8 +131,6 @@ export default function App() {
       return
     }
     if (!treeNode.activeCheck(previousMove)) {
-      console.log('this is the boardtree:')
-      console.log(boardTree);
       alert("brotjer look at the previous move, do you even know the rulse");
       return
     }
@@ -239,7 +164,7 @@ export default function App() {
           Player {currentPlayer} turn
         </h1>
       </div>
-      <Board depth={dimension} row={0} column={0} handleMove={handleMove} treeNode={boardTree} activeBoard={activeBoard} winDepth={winDepth} />
+      <Board depth={dimension} row={0} column={0} handleMove={handleMove} treeNode={boardTree} activeBoard={activeBoard} winDepth={winDepth} previousMove={previousMove} />
     </div>
   );
 }
