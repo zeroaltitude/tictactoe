@@ -1,5 +1,6 @@
 import './App.css';
 import Board from './Board';
+import Moves from './Moves';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import _ from "lodash";
 
@@ -57,24 +58,30 @@ class BoardTree {
       this.isActive=true;
       return true;
     }
-    if (this.wonBy!='') {
-      this.isActive=false;
-      return false;
-    }
-    if (!this.parent.activeCheck(previousMove)) {
-      this.isActive=false;
-      return false;
-    }
     //(where the next player should go based on prior move)
     const shiftedRoute=calculateShift(previousMove);
     let baseBoard=this;
     while (baseBoard.parent!=null) {
       baseBoard=baseBoard.parent;
     }
+    if (!this.parent.activeCheck(previousMove)) {
+      this.isActive=false;
+      return false;
+    }
     //baseBoard is top layer board
-    if (this.row==shiftedRoute[shiftedRoute.length-((this.depth)*2)] && this.column==shiftedRoute[shiftedRoute.length-(((this.depth)*2))+1]) {
+    console.log("THIS THING:")
+    console.log(this.parent.children[shiftedRoute.length-((this.depth)*2)][shiftedRoute[shiftedRoute.length-(((this.depth)*2))+1]])
+    if (((this.row==shiftedRoute[shiftedRoute.length-((this.depth)*2)] && this.column==shiftedRoute[shiftedRoute.length-(((this.depth)*2))+1]) && (
+      this.wonBy==''
+    )) || (
+      this.parent.children[previousMove[1]][previousMove[2]].wonBy!='' && this.wonBy=='' && this.parent.row==shiftedRoute[shiftedRoute.length-((this.depth+1)*2)][shiftedRoute[shiftedRoute.length-(((this.depth+1)*2))+1]]
+    )) {
       this.isActive=true;
       return true;
+    }
+    if (this.wonBy!='') {
+      this.isActive=false;
+      return false;
     }
     //boardPlayerIsSentTo, and subsequently boardCheck, should be depth 1
     const boardPlayerIsSentTo=baseBoard.navigateTo(shiftedRoute);
@@ -82,10 +89,9 @@ class BoardTree {
     let highestBoardCheckParent=boardCheck.parent;
     let highestThisParent=this.parent;
     while (highestBoardCheckParent.wonBy!='') {
+      console.log(highestBoardCheckParent)
+      console.log(highestThisParent)
       highestBoardCheckParent=highestBoardCheckParent.parent;
-      if (highestThisParent.depth<=highestThisParent) {
-        highestThisParent=highestThisParent.parent;
-      }
     }
     if (boardCheck.isAnyParentWon() && highestBoardCheckParent==highestThisParent) {
       this.isActive=true;
@@ -116,7 +122,9 @@ function calculateShift(previousMove) {
 export default function App() {
   //'treeNode' is the board at which the click event happens
   const dimension=3;
+
   const players=['X','O'];
+  const [moveList, setMoveList] = useState([]);
   const [currentPlayer, setCurrentPlayer] = useState(players[0]);
   const [boardTree, setBoardTree] = useState(new BoardTree(null,dimension,0,0));
   const [previousMove, setPreviousMove] = useState([]);
@@ -135,7 +143,9 @@ export default function App() {
       return
     }
     treeNode.children[row][column].wonBy=currentPlayer;
+    setMoveList(moveList.concat([treeNode.getFullRoute([row,column])]));
     event.target.innerHTML=currentPlayer;
+    console.log(moveList);
 
     let currentBoard=treeNode;
     let coords=[];
@@ -153,7 +163,7 @@ export default function App() {
     setPreviousMove([treeNode,row,column,winDepth]);
     setActiveBoard(calculateShift([treeNode,row,column,winDepth]));
     setBoardTree(boardTree)
-  },[currentPlayer, boardTree, previousMove, players]);
+  },[currentPlayer, boardTree, previousMove, players, moveList]);
 
   return (
     <div className="App">
@@ -164,7 +174,12 @@ export default function App() {
           Player {currentPlayer} turn
         </h1>
       </div>
-      <Board depth={dimension} row={0} column={0} handleMove={handleMove} treeNode={boardTree} activeBoard={activeBoard} winDepth={winDepth} previousMove={previousMove} />
+      <div style={{
+        display:"flex"
+      }}>
+        <Moves moveList={moveList} />
+        <Board depth={dimension} row={0} column={0} handleMove={handleMove} treeNode={boardTree} activeBoard={activeBoard} winDepth={winDepth} previousMove={previousMove} />
+      </div>
     </div>
   );
 }

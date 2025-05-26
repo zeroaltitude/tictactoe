@@ -2,7 +2,7 @@ export default function Board(props) {
     const rows=[0,1,2];
     const columns=[0,1,2];
     let wonByFlag=false;
-    const boardActiveFlag=(props.treeNode.activeCheck(props.previousMove)&&props.depth==1);
+    const boardActiveFlag=(props.treeNode.activeCheck(props.previousMove));
     if (props.treeNode.wonBy!='') {
         wonByFlag=true;
     }
@@ -10,7 +10,7 @@ export default function Board(props) {
         <div id={"board-" + props.depth + "-" + props.row + "-" + props.column} style={{
             padding: `${(props.depth+1)*25}px`,
             border: boardActiveFlag? "1px solid green":"",
-            backgroundColor: boardActiveFlag? "green":"#ddd"
+            backgroundColor: boardActiveFlag? "green":"#ddd",
         }}>
             <table>
                 {rows.map((row)=>(
@@ -35,7 +35,6 @@ export default function Board(props) {
                                         margin: "2px",
                                         fontSize: "30px"
                                     }}>
-                                        
                                     </button>
                                 )}
                             </td>
