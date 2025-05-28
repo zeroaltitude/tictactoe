@@ -53,49 +53,42 @@ class BoardTree {
       return this.parent.isAnyParentWon();
     }
   }
-  activeCheck(previousMove) {
-    if (previousMove.length==0 || this.parent==null) {
+  setAllChildren(toSet) {
+    this.children.map((row)=>{row.map((child)=>{
+      if (this.depth>1) {
+        child.setAllChildren(toSet);
+      }
+      child.isActive=toSet;
+    })})
+  }
+  setActiveStatus(shiftedRoute) {
+    //third time's the charm
+    if (shiftedRoute.length==0) {
       this.isActive=true;
-      return true;
+      this.setAllChildren(true);
+      return;
     }
-    //(where the next player should go based on prior move)
-    const shiftedRoute=calculateShift(previousMove);
-    let baseBoard=this;
-    while (baseBoard.parent!=null) {
-      baseBoard=baseBoard.parent;
-    }
-    if (!this.parent.activeCheck(previousMove)) {
+    console.log('og')
+    console.log(shiftedRoute)
+    const unusedCoords=shiftedRoute.splice(2);
+    if (this.row!=shiftedRoute[0] || this.column!=shiftedRoute[1]) {
+      console.log(this.depth)
+      console.log(this)
+      console.log(shiftedRoute)
+      console.log(unusedCoords)
       this.isActive=false;
-      return false;
-    }
-    //baseBoard is top layer board
-    console.log("THIS THING:")
-    console.log(this.parent.children[shiftedRoute.length-((this.depth)*2)][shiftedRoute[shiftedRoute.length-(((this.depth)*2))+1]])
-    if (((this.row==shiftedRoute[shiftedRoute.length-((this.depth)*2)] && this.column==shiftedRoute[shiftedRoute.length-(((this.depth)*2))+1]) && (
-      this.wonBy==''
-    )) || (
-      this.parent.children[previousMove[1]][previousMove[2]].wonBy!='' && this.wonBy=='' && this.parent.row==shiftedRoute[shiftedRoute.length-((this.depth+1)*2)][shiftedRoute[shiftedRoute.length-(((this.depth+1)*2))+1]]
-    )) {
-      this.isActive=true;
-      return true;
+      this.setAllChildren(false)
     }
     if (this.wonBy!='') {
-      this.isActive=false;
-      return false;
+      this.parent.children.map((row)=>{row.map((child)=>{
+        child.setActiveStatus(unusedCoords);
+      })})
     }
-    //boardPlayerIsSentTo, and subsequently boardCheck, should be depth 1
-    const boardPlayerIsSentTo=baseBoard.navigateTo(shiftedRoute);
-    let boardCheck=boardPlayerIsSentTo;
-    let highestBoardCheckParent=boardCheck.parent;
-    let highestThisParent=this.parent;
-    while (highestBoardCheckParent.wonBy!='') {
-      console.log(highestBoardCheckParent)
-      console.log(highestThisParent)
-      highestBoardCheckParent=highestBoardCheckParent.parent;
-    }
-    if (boardCheck.isAnyParentWon() && highestBoardCheckParent==highestThisParent) {
+    else if (this.depth==1) {
       this.isActive=true;
-      return true;
+    }
+    else {
+      this.children[shiftedRoute[0]][shiftedRoute[1]].setActiveStatus(unusedCoords);
     }
   }
 }
@@ -111,6 +104,9 @@ function checkWin(toCheck) {
 }
 
 function calculateShift(previousMove) {
+  if (previousMove.length==0) {
+    return []
+  }
   const route=previousMove[0].getFullRoute([previousMove[1],previousMove[2]]);
   const winDepth=previousMove[3];
   const length=route.length;
@@ -132,13 +128,15 @@ export default function App() {
   const [winDepth, setWinDepth] = useState(0);
 
   const handleMove = useCallback((event,treeNode,row,column) => {
+    boardTree.setActiveStatus(calculateShift(previousMove))
+    console.log(boardTree)
     //treeNode is always the parent board of the move played, not the move itself
     let winDepth=0;
     if (treeNode.children[row][column].wonBy!='') {
       alert("brotjer its takenm do you have eyeys");
       return
     }
-    if (!treeNode.activeCheck(previousMove)) {
+    if (!treeNode.isActive) {
       alert("brotjer look at the previous move, do you even know the rulse");
       return
     }

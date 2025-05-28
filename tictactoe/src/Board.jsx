@@ -3,7 +3,7 @@ export default function Board(props) {
     const columns=[0,1,2];
     const letters=['A','B','C']
     let wonByFlag=false;
-    const boardActiveFlag=(props.treeNode.activeCheck(props.previousMove)&&props.depth==1);
+    const boardActiveFlag=(props.treeNode.isActive);
     if (props.treeNode.wonBy!='') {
         wonByFlag=true;
     }
