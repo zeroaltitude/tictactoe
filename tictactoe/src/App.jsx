@@ -178,7 +178,7 @@ export default function App() {
         display:"flex"
       }}>
         <Moves moveList={moveList} />
-        <Board depth={dimension} row={0} column={0} handleMove={handleMove} treeNode={boardTree} activeBoard={activeBoard} winDepth={winDepth} previousMove={previousMove} />
+        <Board depth={dimension} row={0} column={0} handleMove={handleMove} treeNode={boardTree} activeBoard={activeBoard} winDepth={winDepth} previousMove={previousMove} dimension={dimension} />
       </div>
     </div>
   );
