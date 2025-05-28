@@ -3,7 +3,6 @@ import { debugLog } from "./App";
 export default function Board(props) {
     const rows = [0, 1, 2];
     const columns = [0, 1, 2];
-    const letters = ['A', 'B', 'C'];
     const boardActiveFlag = props.treeNode.activeCheck(props.previousMove) && props.depth === 1;
 
     return (
@@ -13,11 +12,11 @@ export default function Board(props) {
             backgroundColor: boardActiveFlag ? "green" : "#ddd",
         }}>
             <table>
+                <tbody>
                 {rows.map((row)=>(
-                    <tr>
-                        {props.depth===props.dimension?<h1 style={{color:"rgb(134, 0, 0)"}}>{letters[row]}</h1>:''}
+                    <tr key={`row-${props.depth}-${props.row}-${props.column}-${row}`}>
                         {columns.map((column)=>(
-                            <td id={"cell-" + "-" + props.depth + "-" + props.row + "-" + props.column + "-" + row + "-" + column} style={{
+                            <td key={"cell-" + "-" + props.depth + "-" + props.row + "-" + props.column + "-" + row + "-" + column} style={{
                                 borderBottom: row<2? `${props.depth*3+1}px solid black`:'',
                                 borderLeft: column>0? `${props.depth*3+1}px solid black`:''
                              }}>
@@ -44,6 +43,7 @@ export default function Board(props) {
                         ))}
                     </tr>
                 ))}
+                </tbody>
             </table>
         </div>
     );

@@ -1,13 +1,16 @@
 import './App.css';
 import Board from './Board';
 import Moves, { Premover } from './Moves';
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useState } from "react";
+import { ToastContainer, toast } from 'react-toastify';
 import _ from "lodash";
 
 const NS_DEBUG_NAMES = {
     "MOVE_RECORDER": true,
     "MOVE_CLICK": false,
+    "MOVER_DEBUG": false,
 };
+
 export const debugLog = (namespace, message) => {
     if (NS_DEBUG_NAMES[namespace]) {
         console.log(`[${namespace}] ${message}`);
@@ -20,17 +23,16 @@ class BoardTree {
     this.depth = depth;
     this.row = row;
     this.column = column;
-    this.children = 0;
     this.wonBy = '';
+    this.children = [];
     this.rootNode = root === null ? this : root;
     if (depth === 0) {
-      return 0;
+      return;
     }
-    this.children = [];
-    for (let child1=0;child1<3;child1++) {
+    for (let child1 = 0; child1 < 3; child1++) {
       let temp= [];
-      for (let child2=0;child2<3;child2++) {
-        temp.push(new BoardTree(this.rootNode, this, depth-1, child1, child2))
+      for (let child2 = 0; child2 < 3; child2++) {
+        temp.push(new BoardTree(this.rootNode, this, depth - 1, child1, child2))
       }
       this.children.push(temp)
     }
@@ -126,36 +128,41 @@ function calculateShift(previousMove) {
 
 export default function App() {
   //'treeNode' is the board at which the click event happens
-  const dimension=3;
-  const players = useMemo(() => ['X','O'], []);
+  const dimension = 3;
   const [moveList, setMoveList] = useState([]);
-  const [currentPlayer, setCurrentPlayer] = useState(players[0]);
+  const [currentPlayer, setCurrentPlayer] = useState('X');
   const [boardTree, setBoardTree] = useState(new BoardTree(null, null, dimension, 0,  0));
   const [previousMove, setPreviousMove] = useState([]);
   const [winDepth, setWinDepth] = useState(0);
 
-  const handleMove = useCallback((event,treeNode,row,column) => {
-    //treeNode is always the parent board of the move played, not the move itself
+  const notify = (message) => toast(message);
+
+  const handleMove = useCallback((event, treeNode, row, column) => {
+    /* treeNode is always the parent board of the move played, not the move itself */
     if (!treeNode.activeCheck(previousMove)) {
-      alert("brotjer look at the previous move, do you even know the rulse");
-      return
+      notify(`brotjer look at the previous move, do you even know the rulse: [${event.target.id}]`);
+      return;
     }
-    treeNode.children[row][column].wonBy = currentPlayer;
-    setMoveList(moveList.concat([treeNode.getFullRoute([row,column])]));
+    // Create a new boardTree reference to ensure React detects the state change
+    const newBoardTree = _.cloneDeep(boardTree);
+    // Find the corresponding node in the new boardTree
+    const newTreeNode = newBoardTree.getNodeByCoordRoute(treeNode.getFullRoute([]));
+    newTreeNode.children[row][column].wonBy = currentPlayer;
+    setMoveList(moveList.concat([newTreeNode.getFullRoute([row,column])]));
     event.target.innerHTML = currentPlayer;
-    let currentBoard = treeNode;
+    let currentBoard = newTreeNode;
     let winDepth= 0;
     while (checkWin(currentBoard)) {
-      alert(`${currentPlayer} won!`);
+      notify(`${currentPlayer} won!`);
       currentBoard.wonBy = currentPlayer;
       winDepth++;
       currentBoard = currentBoard.parent;
     }
     setWinDepth(winDepth);
-    setCurrentPlayer(players[(players.indexOf(currentPlayer)+1)%2]);
-    setPreviousMove([treeNode,row,column,winDepth]);
-    setBoardTree(boardTree)
-  },[currentPlayer, boardTree, previousMove, players, moveList]);
+    setPreviousMove([newTreeNode,row,column,winDepth]);
+    setBoardTree(newBoardTree);
+    setCurrentPlayer(currentPlayer === 'X' ? 'O' : 'X');
+  },[currentPlayer, boardTree, previousMove, moveList]);
 
   return (
     <div className="App">
@@ -170,8 +177,17 @@ export default function App() {
         display:"flex"
       }}>
         <Moves moveList={moveList} />
-        <Premover handleMove={handleMove} boardTree={boardTree} />
-        <Board depth={dimension} row={0} column={0} handleMove={handleMove} treeNode={boardTree} winDepth={winDepth} previousMove={previousMove} dimension={dimension} />
+        <Premover handleMove={handleMove} currentPlayer={currentPlayer} />
+        <Board
+            depth={dimension}
+            row={0} column={0}
+            handleMove={handleMove}
+            treeNode={boardTree}
+            winDepth={winDepth}
+            previousMove={previousMove}
+            dimension={dimension}
+        />
+        <ToastContainer />
       </div>
     </div>
   );
