@@ -118,12 +118,12 @@ function checkWin(toCheck) {
 }
 
 function calculateShift(previousMove) {
-  const route=previousMove[0].getFullRoute([previousMove[1],previousMove[2]]);
-  const winDepth=previousMove[3];
-  const length=route.length;
-  const pre=route.splice(0,length-2*(winDepth+2));
-  const suf=route.splice(2);
-  return pre.concat(suf);
+  const route = previousMove[0].getFullRoute([previousMove[1], previousMove[2]]); //[0, 0, 0, 0, 2, 2]
+  const winDepth = previousMove[3];
+  const length = route.length;
+  const pre = route.splice(0, length - 2 * (winDepth + 2)); // pre=[0, 0] route=[0, 0, 2, 2]
+  const suf = route.splice(2); // suf=[2, 2] route=[0, 0]
+  return pre.concat(suf); // [0, 0, 2, 2]
 }
 
 export default function App() {
