@@ -185,9 +185,10 @@ export function Premover(props) {
             paddingRight: "20px",
             paddingLeft: "10px",
             backgroundColor: "#222222",
-            fontFamily: "monospace"
+            fontFamily: "monospace",
+            width: "70px"
         }}>
-            <h2 style={{color:"white"}}>Premover</h2>
+            <h2 style={{color: "white"}}>Premover</h2>
             <button onClick={premover.bind(this, 0)}>[0] Premove 1</button>
             <button onClick={premover.bind(this, 1)}>[1] Premove 2</button>
             <button onClick={premover.bind(this, 2)}>[2] Premove 3</button>

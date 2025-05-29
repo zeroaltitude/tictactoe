@@ -9,12 +9,81 @@ const NS_DEBUG_NAMES = {
     "MOVE_RECORDER": true,
     "MOVE_CLICK": false,
     "MOVER_DEBUG": false,
+    "SPEC_COMPARE": true,
 };
 
 export const debugLog = (namespace, message) => {
     if (NS_DEBUG_NAMES[namespace]) {
         console.log(`[${namespace}] ${message}`);
     }
+};
+
+// the same as calculateShift
+const targetBoardSpec = (previousMove, depth) => {
+  // strategy: get the full route to the move; it's an array of size depth * 2
+  // e.g. [0, 0, 1, 1, 2, 2]
+  const route = previousMove[0].getFullRoute([previousMove[1], previousMove[2]]);
+  // then, we split this into two arrays: arr1 of size (depth - 1) * 2, and arr2 of size 2
+  // e.g. [0, 0, 1, 1], [2, 2]
+  let headArr = route.slice(0, 2 * (depth - 1));
+  const tailArr = route.slice(2 * (depth - 1));
+  // we keep the first (depth - 2) * 2 items from the first array starting at windepth * 2; the first array
+  // represents a path that is now shorter because it will be the prefix for a route pointing to a new board at the
+  // position where the last path pointed at a potentially different board
+  // e.g. [0, 0], [2, 2] (windepth 1)
+  // e.g. [1, 1], [2, 2] (windepth 2)
+  // e.g. [1, 1], [2, 2] (windepth 3) -- hit the ceiling, just unshifted one pair from the existing headarray to make
+  // room for the tail array
+  if (previousMove[3] * 2 >= headArr.length) {
+    headArr.shift();
+    headArr.shift();
+  }
+  else {
+    headArr = headArr.slice(previousMove[3] * 2, previousMove[3] * 2 + 2 * (depth - 2));
+  }
+  // now, we append the tail array to the head array
+  headArr = headArr.concat(tailArr);
+  // we now have a path that's shorter than the default path; since we'll be using parentTreeNode.getNodeByCoordRoute
+  // instead of rootNode.getNodeByCoordRoute, our array will now be the right length
+  // validate that headArr is of length (depth - 1) * 2
+  if (headArr.length !== 2 * (depth - 1)) {
+    alert("Target boards length mismatch: expected " + (2 * (depth - 1)) + ", got " + headArr.length);
+  }
+  // if this board spec COLLIDES with a won board, we take each won board and replace it with *, *
+  // let proposedBoardSpec = this.rootNode.getNodeByCoordRoute(headArr);
+  return headArr;
+};
+
+// the same as targetBoardSpec
+const calculateShift = (previousMove) => {
+  //[0, 0, 0, 0, 2, 2]                          | [0, 0, 1, 1, 2, 2]
+  const route = previousMove[0].getFullRoute([previousMove[1], previousMove[2]]);
+  const winDepth = previousMove[3];
+  const length = route.length;
+  // WINDEPTH 0 pre=[0, 0] route=[0, 0, 2, 2]   | [0, 0], [1, 1, 2, 2]
+  // WINDEPTH 1 pre=[] route=[0, 0, 0, 0, 2, 2] | [], [0, 0, 1, 1, 2, 2]
+  // WINDEPTH 2 pre=[] route=[0, 0, 0, 0, 2, 2] | [], [0, 0, 1, 1, 2, 2]
+  // WINDEPTH 3 pre=[] route=[0, 0, 0, 0, 2, 2] | [], [0, 0, 1, 1, 2, 2]
+  const pre = route.splice(0, length - 2 * (winDepth + 2));
+  // WINDEPTH 0 suf=[2, 2] route=[0, 0]         | [2, 2], [1, 1]
+  // WINDEPTH 1 suf=[0, 0, 2, 2] route=[0, 0]   | [1, 1, 2, 2], [0, 0]
+  // WINDEPTH 2 suf=[0, 0, 2, 2] route=[0, 0]   | [1, 1, 2, 2], [0, 0]
+  // WINDEPTH 3 suf=[0, 0, 2, 2] route=[0, 0]   | [1, 1, 2, 2], [0, 0]
+  const suf = route.splice(2);
+  // WINDEPTH 0 [0, 0, 2, 2]                    | [0, 0, 1, 1, 2, 2]
+  // WINDEPTH 1 [0, 0, 2, 2]                    | [1, 1, 2, 2]
+  // WINDEPTH 2 [0, 0, 2, 2]                    | [1, 1, 2, 2]
+  // WINDEPTH 3 [0, 0, 2, 2]                    | [1, 1, 2, 2]
+  return pre.concat(suf);
+};
+
+const pathMatches = (templateSupportingPath, path) => {
+  for (let i = 0; i < templateSupportingPath.length; i++) {
+    if (templateSupportingPath[i] !== '*' && templateSupportingPath[i] !== path[i]) {
+      return false;
+    }
+  }
+  return true;
 };
 
 class BoardTree {
@@ -49,10 +118,10 @@ class BoardTree {
   }
 
   getNodeByCoordRoute(coordRoute) {
-    //'this' is starting board for coordinate transformation
+    // 'this' is starting board for coordinate transformation
     let start = this;
-    for (let pair=0;pair<coordRoute.length;pair+=2) {
-      start=start.children[coordRoute[pair]][coordRoute[pair+1]];
+    for (let pair = 0; pair < coordRoute.length; pair += 2) {
+      start = start.children[coordRoute[pair]][coordRoute[pair + 1]];
     }
     return start;
   }
@@ -83,11 +152,22 @@ class BoardTree {
       return true;
     }
     // where the next player should go based on prior move given that that board is not yet won
+    let boardSpec = targetBoardSpec(previousMove, this.rootNode.depth);
     const shiftedRoute = calculateShift(previousMove);
+    // debugLog("SPEC_COMPARE", `targetBoardSpec: ${boardSpec}, shiftedRoute: ${shiftedRoute}`);
+    // debugLog("SPEC_COMPARE", `compare: ${_.isEqual(boardSpec, shiftedRoute)}`);
+    // debugLog("SPEC_COMPARE", `match: ${_.isEqual(this.getFullRoute([]), shiftedRoute)}`);
+    // debugLog("SPEC_COMPARE", `match: ${_.isEqual(this.getFullRoute([]), boardSpec)}`);
+    // debugLog("SPEC_COMPARE", `match: ${pathMatches(this.getFullRoute([]), boardSpec)}`);
+    // is the current board the one that the next player should play on?
     if (_.isEqual(this.getFullRoute([]), shiftedRoute)) {
         // if the current board is the one that the next player should play on, then it is active
         return true;
     }
+    // did the prior move map to a board that is won?
+    let shiftedRouteBoard = this.rootNode.getNodeByCoordRoute(shiftedRoute);
+
+
     // now, we could have failed the prior check because the route mapped to a won board; account for this
     let shiftedRouteBoard = this.rootNode.getNodeByCoordRoute(shiftedRoute);
     let tempThis = this;
@@ -115,15 +195,6 @@ function checkWin(toCheck) {
     }
   }
   return false;
-}
-
-function calculateShift(previousMove) {
-  const route = previousMove[0].getFullRoute([previousMove[1], previousMove[2]]); //[0, 0, 0, 0, 2, 2]
-  const winDepth = previousMove[3];
-  const length = route.length;
-  const pre = route.splice(0, length - 2 * (winDepth + 2)); // pre=[0, 0] route=[0, 0, 2, 2]
-  const suf = route.splice(2); // suf=[2, 2] route=[0, 0]
-  return pre.concat(suf); // [0, 0, 2, 2]
 }
 
 export default function App() {
