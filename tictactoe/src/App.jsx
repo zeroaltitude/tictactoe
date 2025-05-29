@@ -9,7 +9,8 @@ const NS_DEBUG_NAMES = {
     "MOVE_RECORDER": true,
     "MOVE_CLICK": false,
     "MOVER_DEBUG": false,
-    "SPEC_COMPARE": true,
+    "SPEC_COMPARE": false,
+    "ERROR": true,
 };
 
 export const debugLog = (namespace, message) => {
@@ -20,20 +21,9 @@ export const debugLog = (namespace, message) => {
 
 // the same as calculateShift
 const targetBoardSpec = (previousMove, depth) => {
-  // strategy: get the full route to the move; it's an array of size depth * 2
-  // e.g. [0, 0, 1, 1, 2, 2]
   const route = previousMove[0].getFullRoute([previousMove[1], previousMove[2]]);
-  // then, we split this into two arrays: arr1 of size (depth - 1) * 2, and arr2 of size 2
-  // e.g. [0, 0, 1, 1], [2, 2]
   let headArr = route.slice(0, 2 * (depth - 1));
   const tailArr = route.slice(2 * (depth - 1));
-  // we keep the first (depth - 2) * 2 items from the first array starting at windepth * 2; the first array
-  // represents a path that is now shorter because it will be the prefix for a route pointing to a new board at the
-  // position where the last path pointed at a potentially different board
-  // e.g. [0, 0], [2, 2] (windepth 1)
-  // e.g. [1, 1], [2, 2] (windepth 2)
-  // e.g. [1, 1], [2, 2] (windepth 3) -- hit the ceiling, just unshifted one pair from the existing headarray to make
-  // room for the tail array
   if (previousMove[3] * 2 >= headArr.length) {
     headArr.shift();
     headArr.shift();
@@ -41,49 +31,11 @@ const targetBoardSpec = (previousMove, depth) => {
   else {
     headArr = headArr.slice(previousMove[3] * 2, previousMove[3] * 2 + 2 * (depth - 2));
   }
-  // now, we append the tail array to the head array
   headArr = headArr.concat(tailArr);
-  // we now have a path that's shorter than the default path; since we'll be using parentTreeNode.getNodeByCoordRoute
-  // instead of rootNode.getNodeByCoordRoute, our array will now be the right length
-  // validate that headArr is of length (depth - 1) * 2
   if (headArr.length !== 2 * (depth - 1)) {
-    alert("Target boards length mismatch: expected " + (2 * (depth - 1)) + ", got " + headArr.length);
+    debugLog("ERROR", "Target boards length mismatch: expected " + (2 * (depth - 1)) + ", got " + headArr.length);
   }
-  // if this board spec COLLIDES with a won board, we take each won board and replace it with *, *
-  // let proposedBoardSpec = this.rootNode.getNodeByCoordRoute(headArr);
   return headArr;
-};
-
-// the same as targetBoardSpec
-const calculateShift = (previousMove) => {
-  //[0, 0, 0, 0, 2, 2]                          | [0, 0, 1, 1, 2, 2]
-  const route = previousMove[0].getFullRoute([previousMove[1], previousMove[2]]);
-  const winDepth = previousMove[3];
-  const length = route.length;
-  // WINDEPTH 0 pre=[0, 0] route=[0, 0, 2, 2]   | [0, 0], [1, 1, 2, 2]
-  // WINDEPTH 1 pre=[] route=[0, 0, 0, 0, 2, 2] | [], [0, 0, 1, 1, 2, 2]
-  // WINDEPTH 2 pre=[] route=[0, 0, 0, 0, 2, 2] | [], [0, 0, 1, 1, 2, 2]
-  // WINDEPTH 3 pre=[] route=[0, 0, 0, 0, 2, 2] | [], [0, 0, 1, 1, 2, 2]
-  const pre = route.splice(0, length - 2 * (winDepth + 2));
-  // WINDEPTH 0 suf=[2, 2] route=[0, 0]         | [2, 2], [1, 1]
-  // WINDEPTH 1 suf=[0, 0, 2, 2] route=[0, 0]   | [1, 1, 2, 2], [0, 0]
-  // WINDEPTH 2 suf=[0, 0, 2, 2] route=[0, 0]   | [1, 1, 2, 2], [0, 0]
-  // WINDEPTH 3 suf=[0, 0, 2, 2] route=[0, 0]   | [1, 1, 2, 2], [0, 0]
-  const suf = route.splice(2);
-  // WINDEPTH 0 [0, 0, 2, 2]                    | [0, 0, 1, 1, 2, 2]
-  // WINDEPTH 1 [0, 0, 2, 2]                    | [1, 1, 2, 2]
-  // WINDEPTH 2 [0, 0, 2, 2]                    | [1, 1, 2, 2]
-  // WINDEPTH 3 [0, 0, 2, 2]                    | [1, 1, 2, 2]
-  return pre.concat(suf);
-};
-
-const pathMatches = (templateSupportingPath, path) => {
-  for (let i = 0; i < templateSupportingPath.length; i++) {
-    if (templateSupportingPath[i] !== '*' && templateSupportingPath[i] !== path[i]) {
-      return false;
-    }
-  }
-  return true;
 };
 
 class BoardTree {
@@ -153,32 +105,35 @@ class BoardTree {
     }
     // where the next player should go based on prior move given that that board is not yet won
     let boardSpec = targetBoardSpec(previousMove, this.rootNode.depth);
-    const shiftedRoute = calculateShift(previousMove);
-    // debugLog("SPEC_COMPARE", `targetBoardSpec: ${boardSpec}, shiftedRoute: ${shiftedRoute}`);
-    // debugLog("SPEC_COMPARE", `compare: ${_.isEqual(boardSpec, shiftedRoute)}`);
-    // debugLog("SPEC_COMPARE", `match: ${_.isEqual(this.getFullRoute([]), shiftedRoute)}`);
-    // debugLog("SPEC_COMPARE", `match: ${_.isEqual(this.getFullRoute([]), boardSpec)}`);
-    // debugLog("SPEC_COMPARE", `match: ${pathMatches(this.getFullRoute([]), boardSpec)}`);
+    // const shiftedRoute = calculateShift(previousMove);
     // is the current board the one that the next player should play on?
-    if (_.isEqual(this.getFullRoute([]), shiftedRoute)) {
-        // if the current board is the one that the next player should play on, then it is active
-        return true;
+    if (_.isEqual(this.getFullRoute([]), boardSpec)) {
+      // if the current board is the one that the next player should play on, then it is active
+      return true;
     }
     // did the prior move map to a board that is won?
-    let shiftedRouteBoard = this.rootNode.getNodeByCoordRoute(shiftedRoute);
-
-
-    // now, we could have failed the prior check because the route mapped to a won board; account for this
-    let shiftedRouteBoard = this.rootNode.getNodeByCoordRoute(shiftedRoute);
-    let tempThis = this;
-    while (shiftedRouteBoard !== null && tempThis !== null) {
-      if (shiftedRouteBoard.wonBy !== '' && tempThis.hasSameParentAs(shiftedRouteBoard)) {
-        // now limit the boards to those whose children are won at the relevant coordinate OR are not won but match
-        // the previous move coordinate
+    let shiftedRouteBoard = this.rootNode.getNodeByCoordRoute(boardSpec);
+    // assume there are three patterns of won boards:
+    if (shiftedRouteBoard.wonBy !== '') {
+      // in this case, the next board up is won, so if we have the same parent as the won board, we are active
+      if (this.hasSameParentAs(shiftedRouteBoard)) {
         return true;
       }
-      shiftedRouteBoard = shiftedRouteBoard.parent;
-      tempThis = tempThis.parent;
+    }
+    shiftedRouteBoard = shiftedRouteBoard.parent;
+    if (shiftedRouteBoard.wonBy !== '') {
+      // in this case, the next two boards up are won, so we use the match pattern to see if we (a) match the coord
+      // of the shifted route or (b) the board of our parent that DOES match the shifted route is won
+      if (boardSpec[0] === this.row && boardSpec[1] === this.column) {
+        // we match the coordinate of the shifted route, so we are active
+        return true;
+      } else {
+        const localTargetBoard = this.parent.children[boardSpec[0]][boardSpec[1]];
+        if (localTargetBoard.wonBy !== '') {
+            // the parent board that matches the shifted route is won, so we are active
+            return true;
+        }
+      }
     }
     // bail
     return false;
@@ -186,10 +141,21 @@ class BoardTree {
 }
 
 function checkWin(toCheck) {
-  const winconditions = [[[0, 0], [0, 1], [0, 2]], [[1, 0], [1, 1], [1, 2]], [[2, 0], [2, 1], [2, 2]], [[0, 0], [1, 0], [2, 0]], [[0, 1], [1, 1], [2, 1]], [[0, 2], [1, 2], [2, 2]], [[0, 2], [1, 1], [2, 0]], [[0, 0], [1, 1], [2, 2]]]
+  const winconditions = [
+       [[0, 0], [0, 1], [0, 2]],
+       [[1, 0], [1, 1], [1, 2]],
+       [[2, 0], [2, 1], [2, 2]],
+       [[0, 0], [1, 0], [2, 0]],
+       [[0, 1], [1, 1], [2, 1]],
+       [[0, 2], [1, 2], [2, 2]],
+       [[0, 2], [1, 1], [2, 0]],
+       [[0, 0], [1, 1], [2, 2]]
+  ]
   for (let i=0; i<winconditions.length; i++) {
-    if (toCheck.children[winconditions[i][0][0]][winconditions[i][0][1]].wonBy === toCheck.children[winconditions[i][1][0]][winconditions[i][1][1]].wonBy &&
-        toCheck.children[winconditions[i][1][0]][winconditions[i][1][1]].wonBy === toCheck.children[winconditions[i][2][0]][winconditions[i][2][1]].wonBy &&
+    if (toCheck.children[winconditions[i][0][0]][winconditions[i][0][1]].wonBy ===
+        toCheck.children[winconditions[i][1][0]][winconditions[i][1][1]].wonBy &&
+        toCheck.children[winconditions[i][1][0]][winconditions[i][1][1]].wonBy ===
+        toCheck.children[winconditions[i][2][0]][winconditions[i][2][1]].wonBy &&
         toCheck.children[winconditions[i][0][0]][winconditions[i][0][1]].wonBy !== "") {
       return true;
     }

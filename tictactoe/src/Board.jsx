@@ -16,15 +16,23 @@ export default function Board(props) {
                 {rows.map((row)=>(
                     <tr key={`row-${props.depth}-${props.row}-${props.column}-${row}`}>
                         {columns.map((column)=>(
-                            <td key={"cell-" + "-" + props.depth + "-" + props.row + "-" + props.column + "-" + row + "-" + column} style={{
+                            <td key={`cell-${props.depth}-${props.row}-${props.column}-${row}-${column}`} style={{
                                 borderBottom: row<2? `${props.depth*3+1}px solid black`:'',
                                 borderLeft: column>0? `${props.depth*3+1}px solid black`:''
                              }}>
                                 {props.depth>1 && (
-                                    <Board depth={props.depth-1} row={row} column={column} handleMove={props.handleMove} treeNode={props.treeNode.children[row][column]} winDepth={props.winDepth} previousMove={props.previousMove} dimension={props.dimension} />
+                                    <Board depth={props.depth-1}
+                                           row={row} column={column}
+                                           handleMove={props.handleMove}
+                                           treeNode={props.treeNode.children[row][column]}
+                                           winDepth={props.winDepth}
+                                           previousMove={props.previousMove}
+                                           dimension={props.dimension} />
                                 )}
                                 {props.depth===1 && (
-                                    <button id={`cell-${props.treeNode.getFullRoute([row,column]).join('-')}`} onClick={(event) => {
+                                    <button
+                                        id={`cell-${props.treeNode.getFullRoute([row,column]).join('-')}`}
+                                        onClick={(event) => {
                                             debugLog("MOVE_CLICK", event.target.id);
                                             debugLog("MOVE_RECORDER", props.treeNode.getFullRoute([row,column]) );
                                             props.handleMove(event,props.treeNode,row,column)
