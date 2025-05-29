@@ -120,18 +120,21 @@ class BoardTree {
         return true;
       }
     }
-    shiftedRouteBoard = shiftedRouteBoard.parent;
-    if (shiftedRouteBoard.wonBy !== '') {
-      // in this case, the next two boards up are won, so we use the match pattern to see if we (a) match the coord
-      // of the shifted route or (b) the board of our parent that DOES match the shifted route is won
-      if (boardSpec[0] === this.row && boardSpec[1] === this.column) {
-        // we match the coordinate of the shifted route, so we are active
-        return true;
-      } else {
-        const localTargetBoard = this.parent.children[boardSpec[0]][boardSpec[1]];
-        if (localTargetBoard.wonBy !== '') {
+    while (shiftedRouteBoard.parent != null) {
+      shiftedRouteBoard = shiftedRouteBoard.parent;
+      if (shiftedRouteBoard.wonBy !== '') {
+        // in this case, the next two boards up are won, so we use the match pattern to see if we (a) match the coord
+        // of the shifted route or (b) the board of our parent that DOES match the shifted route is won
+        const boardIndex = boardSpec.length - shiftedRouteBoard.depth* 2;
+        if (boardSpec[boardIndex] === this.row && boardSpec[boardIndex + 1] === this.column) {
+          // we match the coordinate of the shifted route, so we are active
+          return true;
+        } else {
+          const localTargetBoard = this.parent.children[boardSpec[boardIndex]][boardSpec[boardIndex + 1]];
+          if (localTargetBoard.wonBy !== '') {
             // the parent board that matches the shifted route is won, so we are active
             return true;
+          }
         }
       }
     }
