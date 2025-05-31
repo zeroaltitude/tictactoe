@@ -19,23 +19,12 @@ export const debugLog = (namespace, message) => {
     }
 };
 
-// the same as calculateShift
 const targetBoardSpec = (previousMove, depth) => {
+  // algorithm: poke out one position at the full route to the previous move at arrlen - (2 * (windepth + 1))
   const route = previousMove[0].getFullRoute([previousMove[1], previousMove[2]]);
-  let headArr = route.slice(0, 2 * (depth - 1));
-  const tailArr = route.slice(2 * (depth - 1));
-  if (previousMove[3] * 2 >= headArr.length) {
-    headArr.shift();
-    headArr.shift();
-  }
-  else {
-    headArr = headArr.slice(previousMove[3] * 2, previousMove[3] * 2 + 2 * (depth - 2));
-  }
-  headArr = headArr.concat(tailArr);
-  if (headArr.length !== 2 * (depth - 1)) {
-    debugLog("ERROR", "Target boards length mismatch: expected " + (2 * (depth - 1)) + ", got " + headArr.length);
-  }
-  return headArr;
+  const splitIndex = route.length - (2 * (previousMove[3] + 2));
+  // on overflow negative, rectify to top board positions 0 through 2
+  return route.slice(0, splitIndex < 0 ? 0 : splitIndex).concat(route.slice(splitIndex < 0 ? 2 : splitIndex + 2));
 };
 
 class BoardTree {
@@ -105,34 +94,29 @@ class BoardTree {
     }
     // where the next player should go based on prior move given that that board is not yet won
     let boardSpec = targetBoardSpec(previousMove, this.rootNode.depth);
-    // const shiftedRoute = calculateShift(previousMove);
-    // is the current board the one that the next player should play on?
+    // if the current board is the one that the next player should play on, then it is active
     if (_.isEqual(this.getFullRoute([]), boardSpec)) {
-      // if the current board is the one that the next player should play on, then it is active
       return true;
     }
     // did the prior move map to a board that is won?
     let shiftedRouteBoard = this.rootNode.getNodeByCoordRoute(boardSpec);
-    // assume there are three patterns of won boards:
-    if (shiftedRouteBoard.wonBy !== '') {
-      // in this case, the next board up is won, so if we have the same parent as the won board, we are active
-      if (this.hasSameParentAs(shiftedRouteBoard)) {
-        return true;
-      }
+    // in this case, the next board up is won, so if we have the same parent as the won board, we are active
+    if (shiftedRouteBoard.wonBy !== '' && this.hasSameParentAs(shiftedRouteBoard)) {
+      return true;
     }
     while (shiftedRouteBoard.parent != null) {
       shiftedRouteBoard = shiftedRouteBoard.parent;
       if (shiftedRouteBoard.wonBy !== '') {
         // in this case, the next two boards up are won, so we use the match pattern to see if we (a) match the coord
-        // of the shifted route or (b) the board of our parent that DOES match the shifted route is won
-        const boardIndex = boardSpec.length - shiftedRouteBoard.depth* 2;
+        // of the shifted route or (b) the board of our sibling that DOES match the shifted route is won
+        const boardIndex = boardSpec.length - shiftedRouteBoard.depth * 2;
         if (boardSpec[boardIndex] === this.row && boardSpec[boardIndex + 1] === this.column) {
           // we match the coordinate of the shifted route, so we are active
           return true;
         } else {
           const localTargetBoard = this.parent.children[boardSpec[boardIndex]][boardSpec[boardIndex + 1]];
+          // the sibling board that matches the shifted route is won, so we are active
           if (localTargetBoard.wonBy !== '') {
-            // the parent board that matches the shifted route is won, so we are active
             return true;
           }
         }
