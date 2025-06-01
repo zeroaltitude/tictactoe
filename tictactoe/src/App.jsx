@@ -124,6 +124,7 @@ class BoardTree {
     // the board is won
     if (shiftedRouteBoard.wonBy !== '') {
       let offset;
+      // get the right won board at the top level of a won stack of boards
       [shiftedRouteBoard, offset] = shiftedRouteBoard.walkWonParents();
       // then if I share the same offset (by windepth) parent as the won board...
       if (this.ancestor(offset) === shiftedRouteBoard.parent) {
