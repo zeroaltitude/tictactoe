@@ -6,25 +6,26 @@ import { ToastContainer, toast } from 'react-toastify';
 import _ from "lodash";
 
 const NS_DEBUG_NAMES = {
-    "MOVE_RECORDER": true,
+    "MOVE_RECORDER": false,
     "MOVE_CLICK": false,
     "MOVER_DEBUG": false,
     "SPEC_COMPARE": false,
+    "SHIFT_DEBUG": true,
     "ERROR": true,
 };
 
-export const debugLog = (namespace, message) => {
+export const debugLog = (namespace, message, obj = null) => {
     if (NS_DEBUG_NAMES[namespace]) {
-        console.log(`[${namespace}] ${message}`);
+        console.log(`[${namespace}] ${message}`, obj);
     }
 };
 
-const targetBoardSpec = (previousMove, depth) => {
+const targetBoardSpec = (previousMove) => {
   // algorithm: poke out one position at the full route to the previous move at arrlen - (2 * (windepth + 1))
   const route = previousMove[0].getFullRoute([previousMove[1], previousMove[2]]);
-  const splitIndex = route.length - (2 * (previousMove[3] + 2));
-  // on overflow negative, rectify to top board positions 0 through 2
-  return route.slice(0, splitIndex < 0 ? 0 : splitIndex).concat(route.slice(splitIndex < 0 ? 2 : splitIndex + 2));
+  // on overflow negative, rectify to 0
+  const splitIndex = (route.length - (2 * (previousMove[3] + 2))) < 0 ? 0 : (route.length - (2 * (previousMove[3] + 2)));
+  return route.slice(0, splitIndex).concat(route.slice(splitIndex + 2));
 };
 
 class BoardTree {
@@ -37,7 +38,7 @@ class BoardTree {
     this.children = [];
     this.rootNode = root === null ? this : root;
     if (depth === 0) {
-      return;
+      return this.depth;
     }
     for (let child1 = 0; child1 < 3; child1++) {
       let temp= [];
@@ -79,8 +80,28 @@ class BoardTree {
     }
   }
 
-  hasSameParentAs(treeNode) {
-    return this.parent === treeNode.parent;
+  ancestor(depth) {
+    let ancestor = this;
+    while (depth > 0) {
+      if (ancestor.parent != null) {
+        ancestor = ancestor.parent;
+      }
+      depth--;
+    }
+    return ancestor;
+  }
+
+  walkWonParents() {
+    let wonNode = this;
+    if (wonNode.wonBy === '') {
+      return [null, 0];
+    }
+    let offset = 1;
+    while (wonNode.parent != null && wonNode.parent.wonBy !== '') {
+      wonNode = wonNode.parent;
+      offset++;
+    }
+    return [wonNode, offset];
   }
 
   activeCheck(previousMove) {
@@ -93,32 +114,26 @@ class BoardTree {
       return true;
     }
     // where the next player should go based on prior move
-    let boardSpec = targetBoardSpec(previousMove, this.rootNode.depth);
+    let boardSpec = targetBoardSpec(previousMove);
     // if the current board is the one that the next player should play on, given that we're not won, then it is active
     if (_.isEqual(this.getFullRoute([]), boardSpec)) {
       return true;
     }
-    // did the prior move map to a board that is won?
+    // am I a sibling of a won board at the appropriate depth?
     let shiftedRouteBoard = this.rootNode.getNodeByCoordRoute(boardSpec);
-    // in this case, the next board up is won, so if we have the same parent as the won board, we are active
-    if (shiftedRouteBoard.wonBy !== '' && this.hasSameParentAs(shiftedRouteBoard)) {
-      return true;
-    }
-    while (shiftedRouteBoard.parent != null) {
-      shiftedRouteBoard = shiftedRouteBoard.parent;
-      if (shiftedRouteBoard.wonBy !== '') {
-        // in this case, the next two boards up are won, so we use the match pattern to see if we (a) match the coord
-        // of the shifted route or (b) the board of our sibling that DOES match the shifted route is won
-        const boardIndex = boardSpec.length - shiftedRouteBoard.depth * 2;
-        if (boardSpec[boardIndex] === this.row && boardSpec[boardIndex + 1] === this.column) {
-          // we match the coordinate of the shifted route, so we are active
+    // the board is won and the parent isn't
+    if (shiftedRouteBoard.wonBy !== '') {
+      let offset;
+      [shiftedRouteBoard, offset] = shiftedRouteBoard.walkWonParents();
+      // then if I share the same offset (by windepth) parent as the won board...
+      if (this.ancestor(offset) === shiftedRouteBoard.parent) {
+        // either I'm the coordinate on my parent as the previous move
+        if (this.row === previousMove[1] && this.column === previousMove[2]) {
           return true;
-        } else {
-          const localTargetBoard = this.parent.children[boardSpec[boardIndex]][boardSpec[boardIndex + 1]];
-          // the sibling board that matches the shifted route is won, so we are active
-          if (localTargetBoard.wonBy !== '') {
-            return true;
-          }
+        }
+        // or I'm a sibling of the coordinate on my parent as the previous move, and it's won
+        else if (this.parent.children[previousMove[1]][previousMove[2]].wonBy !== '') {
+          return true;
         }
       }
     }
