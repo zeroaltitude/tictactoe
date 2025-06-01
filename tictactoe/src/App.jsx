@@ -91,19 +91,6 @@ class BoardTree {
     return ancestor;
   }
 
-  walkWonParents() {
-    let wonNode = this;
-    if (wonNode.wonBy === '') {
-      return [null, 0];
-    }
-    let offset = 1;
-    while (wonNode.parent != null && wonNode.parent.wonBy !== '') {
-      wonNode = wonNode.parent;
-      offset++;
-    }
-    return [wonNode, offset];
-  }
-
   nodeActiveGivenTargetBoard(targetedBoardSpec) {
     // I'm trying to judge my route with the target board's route. So I take my route as the base template. At each
     // level, I ask: "Does my route match the target board's route?" If it does, proceed assuming true. If not, I check
