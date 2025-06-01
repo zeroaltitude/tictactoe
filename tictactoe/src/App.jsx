@@ -104,6 +104,27 @@ class BoardTree {
     return [wonNode, offset];
   }
 
+  nodeActiveGivenTargetBoard(targetedBoardSpec) {
+    // I'm trying to judge my route with the target board's route. So I take my route as the base template. At each
+    // level, I ask: "Does my route match the target board's route?" If it does, proceed assuming true. If not, I check
+    // whether the board at my layer that DOES match is won; if it is, I proceed assuming true. If it does not, I return
+    // false. If I make it to the end, I return true.
+    let targetedBoard = this.rootNode.getNodeByCoordRoute(targetedBoardSpec);
+    let i = 0;
+    do {
+      if (targetedBoard.row !== this.ancestor(i).row || targetedBoard.column !== this.ancestor(i).column) {
+        // could be ok; have to check if the matching sibling is won
+        if (this.ancestor(i).parent.children[targetedBoard.row][targetedBoard.column].wonBy === '') {
+          // now we're sure
+          return false;
+        }
+      }
+      targetedBoard = targetedBoard.parent;
+      i++;
+    } while (targetedBoard != null);
+    return true;
+  }
+
   activeCheck(previousMove) {
     // playing on a won board is not allowed; this is therefore not active
     if (this.isAnyParentWon()) {
@@ -119,27 +140,11 @@ class BoardTree {
     if (_.isEqual(this.getFullRoute([]), boardSpec)) {
       return true;
     }
-    // am I a sibling of a won board at the appropriate depth?
-    let shiftedRouteBoard = this.rootNode.getNodeByCoordRoute(boardSpec);
-    // the board is won
-    if (shiftedRouteBoard.wonBy !== '') {
-      let offset;
-      // get the right won board at the top level of a won stack of boards
-      [shiftedRouteBoard, offset] = shiftedRouteBoard.walkWonParents();
-      // then if I share the same offset (by stack depth of won parents) parent as the won board...
-      if (this.ancestor(offset) === shiftedRouteBoard.parent) {
-        // either I'm the same coordinate on my parent as the previous move
-        if (this.row === previousMove[1] && this.column === previousMove[2]) {
-          return true;
-        }
-        // or I'm a sibling of the coordinate on my parent as the previous move, and it's won
-        else if (this.parent.children[previousMove[1]][previousMove[2]].wonBy !== '') {
-          return true;
-        }
-      }
+    if (this.depth === 1) {
+      return this.nodeActiveGivenTargetBoard(boardSpec);
+    } else {
+      return false;
     }
-    // bail
-    return false;
   }
 }
 
