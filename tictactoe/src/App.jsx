@@ -126,7 +126,7 @@ class BoardTree {
       let offset;
       // get the right won board at the top level of a won stack of boards
       [shiftedRouteBoard, offset] = shiftedRouteBoard.walkWonParents();
-      // then if I share the same offset (by windepth) parent as the won board...
+      // then if I share the same offset (by stack depth of won parents) parent as the won board...
       if (this.ancestor(offset) === shiftedRouteBoard.parent) {
         // either I'm the coordinate on my parent as the previous move
         if (this.row === previousMove[1] && this.column === previousMove[2]) {
