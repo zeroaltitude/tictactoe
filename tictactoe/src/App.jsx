@@ -131,7 +131,7 @@ class BoardTree {
       return false;
     }
     // on the first move, all boards are active
-    if (previousMove.length === 0 || this.parent == null) {
+    if (previousMove.length === 0) {
       return true;
     }
     // where the next player should go based on prior move

@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 export default function Board(props) {
     const rows = [0, 1, 2];
     const columns = [0, 1, 2];
-    const boardActiveFlag = props.treeNode.activeCheck(props.previousMove) && props.depth === 1;
+    const boardActiveFlag = props.depth === 1 && props.treeNode.activeCheck(props.previousMove);
     const notify = (message) => toast(message);
 
     return (
