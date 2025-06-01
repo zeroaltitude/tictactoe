@@ -155,7 +155,6 @@ function checkWin(toCheck) {
 }
 
 export default function App() {
-  //'treeNode' is the board at which the click event happens
   const dimension = 3;
   const [moveList, setMoveList] = useState([]);
   const [currentPlayer, setCurrentPlayer] = useState('X');
