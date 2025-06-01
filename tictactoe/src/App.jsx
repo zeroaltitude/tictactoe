@@ -128,7 +128,7 @@ class BoardTree {
       [shiftedRouteBoard, offset] = shiftedRouteBoard.walkWonParents();
       // then if I share the same offset (by stack depth of won parents) parent as the won board...
       if (this.ancestor(offset) === shiftedRouteBoard.parent) {
-        // either I'm the coordinate on my parent as the previous move
+        // either I'm the same coordinate on my parent as the previous move
         if (this.row === previousMove[1] && this.column === previousMove[2]) {
           return true;
         }
