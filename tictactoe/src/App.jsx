@@ -135,11 +135,7 @@ class BoardTree {
       return true;
     }
     // where the next player should go based on prior move
-    let boardSpec = targetBoardSpec(previousMove);
-    // if the current board is the one that the next player should play on, given that we're not won, then it is active
-    if (_.isEqual(this.getFullRoute([]), boardSpec)) {
-      return true;
-    }
+    const boardSpec = targetBoardSpec(previousMove);
     if (this.depth === 1) {
       return this.nodeActiveGivenTargetBoard(boardSpec);
     } else {
