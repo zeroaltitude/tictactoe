@@ -121,7 +121,7 @@ class BoardTree {
     }
     // am I a sibling of a won board at the appropriate depth?
     let shiftedRouteBoard = this.rootNode.getNodeByCoordRoute(boardSpec);
-    // the board is won and the parent isn't
+    // the board is won
     if (shiftedRouteBoard.wonBy !== '') {
       let offset;
       [shiftedRouteBoard, offset] = shiftedRouteBoard.walkWonParents();
