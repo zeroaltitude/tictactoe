@@ -179,10 +179,6 @@ export default function App() {
 
   const handleMove = useCallback((event, treeNode, row, column) => {
     /* treeNode is always the parent board of the move played, not the move itself */
-    if (!treeNode.activeCheck(previousMove)) {
-      notify(`brotjer look at the previous move, do you even know the rulse: [${event.target.id}]`);
-      return;
-    }
     // Create a new boardTree reference to ensure React detects the state change
     const newBoardTree = _.cloneDeep(boardTree);
     // Find the corresponding node in the new boardTree
