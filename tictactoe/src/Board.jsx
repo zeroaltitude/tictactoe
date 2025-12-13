@@ -23,7 +23,15 @@ export default function Board(props) {
                                 borderLeft: column>0? `${props.depth*3+1}px solid black`:''
                              }}>
                                 {props.depth>1 && (
-                                    <Board depth={props.depth-1} row={row} column={column} handleMove={props.handleMove} treeNode={props.treeNode.children[row][column]} activeBoard={props.activeBoard} winDepth={props.winDepth} previousMove={props.previousMove} dimension={props.dimension} />
+                                    <>
+                                        <Board depth={props.depth-1} row={row} column={column} handleMove={props.handleMove} treeNode={props.treeNode.children[row][column]} activeBoard={props.activeBoard} winDepth={props.winDepth} previousMove={props.previousMove} dimension={props.dimension} />
+                                        {//true && (
+                                         //   <div style={{position: "absolute"}}>
+                                         //       <h>{columns[column]}</h>
+                                         //   </div>
+                                        //)
+                                        }
+                                    </>
                                 )}
                                 {props.depth===1 && (
                                     <button id={`cell-${props.treeNode.getFullRoute([row,column]).join('-')}`} onClick={(event) => {

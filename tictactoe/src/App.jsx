@@ -147,15 +147,22 @@ export default function App() {
         console.log("move check")
         const response = await fetch(url, { method: "GET" });
         const jsonResponse = await response.json();
-        const moveList = jsonResponse.moves;
-        const coordinates=moveList[moveList.length-1]
+        const respMoveList = jsonResponse.moves;
         setCurrentPlayer(jsonResponse.currentPlayer);
-        try {
-          move(moveList[moveList.length-1])
-        }
-        catch (error) {
-          //console.log("move failed to move: ", error);
-          return;
+        while (respMoveList.length > moveList.length) {
+          try {
+            const coors = respMoveList[moveList.length];
+            moveList.push(coors);
+            setMoveList(moveList);
+            console.log("moving: ", coors);
+            setTimeout(() => {
+                move(coors)
+              }, 300);
+          }
+          catch (error) {
+            //console.log("move failed to move: ", error);
+            return;
+          }
         }
       }
       }, 1000);
@@ -224,7 +231,7 @@ export default function App() {
       }}>
         {gameStarted ? <Moves moveList={moveList} />:''}
         {false&&gameStarted ? <Premover move={move} handleMove={handleMove} currentPlayer={currentPlayer} />:''}
-        {username === '' ? <GameAutomation setUsername={setUsername} setGameId={setGameId} setPlayerIdentifier={setPlayerIdentifier} />:''}
+        {username === '' ? <GameAutomation setUsername={setUsername} setGameId={setGameId} setPlayerIdentifier={setPlayerIdentifier} move={move} />:''}
         {username !== '' && gameStarted && (
           <>
             <GameInfo player1={playerNames[0]} player2={playerNames[1]} />
