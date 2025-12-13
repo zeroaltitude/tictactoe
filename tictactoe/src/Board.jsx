@@ -5,20 +5,21 @@ export default function Board(props) {
     const columns=[0,1,2];
     const letters=['A','B','C']
     let wonByFlag=false;
-    const boardActiveFlag=(props.treeNode.isActive);
+    const boardActiveFlag=(props.treeNode.isActive && props.depth==1);
     if (props.treeNode.wonBy!='') {
         wonByFlag=true;
     }
     return (
         <div id={"board-" + props.depth + "-" + props.row + "-" + props.column} style={{
             padding: `${(props.depth+1)*25}px`,
-            border: boardActiveFlag ? "1px solid green" : "",
-            backgroundColor: boardActiveFlag ? "green" : "#ddd",
+            border: boardActiveFlag? "1px solid green":"",
+            backgroundColor: boardActiveFlag? "green":"#ddd"
         }}>
             <table>
                 <tbody>
                 {rows.map((row)=>(
-                    <tr key={`row-${props.depth}-${props.row}-${props.column}-${row}`}>
+                    <tr>
+                        {props.depth == props.dimension ? <h1 style={{ display: "table-cell", height:"100%", verticalAlign: "middle", color:"rgb(134, 0, 0)"}}>{letters[row]}</h1>:''}
                         {columns.map((column)=>(
                             <td key={"cell-" + "-" + props.depth + "-" + props.row + "-" + props.column + "-" + row + "-" + column} style={{
                                 borderBottom: row<2? `${props.depth*3+1}px solid black`:'',
@@ -29,8 +30,6 @@ export default function Board(props) {
                                 )}
                                 {props.depth===1 && (
                                     <button id={`cell-${props.treeNode.getFullRoute([row,column]).join('-')}`} onClick={(event) => {
-                                            debugLog("MOVE_CLICK", event.target.id);
-                                            debugLog("MOVE_RECORDER", props.treeNode.getFullRoute([row,column]) );
                                             props.handleMove(event,props.treeNode,row,column)
                                         }
                                     }
@@ -43,6 +42,7 @@ export default function Board(props) {
                                     }}>
                                     </button>
                                 )}
+                                {row == 2 && props.depth == props.dimension ? <h1 style={{color:"rgb(134, 0, 0)"}}>{column+1}</h1> : ''}
                             </td>
                         ))}
                     </tr>

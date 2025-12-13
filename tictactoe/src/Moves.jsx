@@ -1,16 +1,98 @@
 import {useCallback} from "react";
-import {debugLog} from "./App";
+import { debugLog } from "./App";
+import logo from "./tictactoelogo.png"
 
-export function Premover(props) {
-    const premove = useCallback((coordinates) => {
-        // Create a fake DOM element if the real one doesn't exist
-        const cellId = `cell-${coordinates.join('-')}`;
-        let targetElement = document.getElementById(cellId);
-        // Log the move for debugging
-        debugLog("MOVER_DEBUG", `Executing move: ${coordinates.join(',')} with player: ${props.currentPlayer || 'unknown'}`);
-        targetElement.click();
+export function GameAutomation(props) {
+    const hostName = window.location.host.split(':')[0];
+    const port = 3030;
+
+    const createGame = useCallback(async() => {
+        //const username = prompt("Username:");
+        //props.setUsername(username);
+        const path = "games";
+        const url = `http://${hostName}:${port}/${path}`;
+        const response = await fetch(url, {
+            method: "POST",
+        });
+        const jsonResponse = await response.json();
+        const gameId = jsonResponse.gameID;
+        props.setGameId(gameId);
+        joinGame(gameId);
     }, [props]);
 
+    const joinGame = useCallback(async (gameId) => {
+        if (typeof(gameId)!=="string") {
+            gameId = prompt("gameID of game youre trying to join:");
+        }
+        const username = prompt("Username:");
+        const path = `game/${gameId}`;
+        const url = `http://${hostName}:${port}/${path}`;
+        const response = await fetch(url, {
+            method: "PUT",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'join',
+                playerName: username
+            })
+        });
+        const jsonResponse = await response.json();
+        console.log("Got response ", jsonResponse);
+        console.log(jsonResponse.playerIdentifier)
+        if (jsonResponse.error) {
+            alert("Game does not exist vro.");
+        } else {
+            props.setPlayerIdentifier(jsonResponse.playerIdentifier);
+            props.setUsername(username);
+            props.setGameId(gameId);
+        }
+    }, [props]);
+
+    return (
+        <div style={{
+            width: "100%",
+            display: "block"
+        }}>
+            <div style={{
+                width: "100%",
+                display: "block"
+            }}>
+                <img src={logo} style={{
+                    scale: "50%",
+                    width: "100%"
+                }} />
+                <h1 style={{
+                    marginTop:"0px"
+                }}>
+                    play now!
+                </h1>
+            </div>
+            <div style={{
+                marginTop: "300px",
+                width:"100%",
+                alignContent: "center",
+              }}>
+                <button onClick={createGame} style={{
+                    width: "250px",
+                    height: "50px",
+                    fontSize: "20px"
+                }}>
+                    create game
+                </button>
+                <button onClick={joinGame} style={{
+                    width: "250px",
+                    height: "50px",
+                    fontSize: "20px"
+                }}>
+                    join game
+                </button>
+            </div>
+        </div>
+    );
+}
+
+export function Premover(props) {
     const premover = useCallback((moveIndex) => {
         // we're going to fake out event and then find the right treemove by coordinate
         // must assume board size since this is NOT a generic debugging tool: depth = 3
@@ -129,6 +211,57 @@ export function Premover(props) {
                 [2, 2, 2, 1, 2, 1],
                 [2, 2, 2, 1, 0, 0],
                 [2, 2, 0, 0, 2, 2],
+                [2, 2, 2, 2, 0, 0]
+            ],
+            // pattern 3: unrestricted, but proposed restricted, copy pattern but at super board win with double collision, NO restriction
+            [
+                [0, 0, 0, 0, 2, 2],
+                [0, 0, 2, 2, 0, 0],
+                [0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 2, 0],
+                [0, 0, 2, 0, 1, 1],
+                [0, 0, 1, 1, 0, 0],
+                [0, 0, 0, 0, 1, 1],
+                [0, 0, 1, 1, 2, 2],
+                [0, 0, 2, 2, 1, 1],
+                [0, 0, 1, 1, 2, 1],
+                [0, 0, 2, 1, 2, 1],
+                [0, 0, 2, 1, 1, 1],
+                [0, 0, 1, 1, 1, 1],
+                [0, 0, 1, 1, 0, 2],
+                [0, 0, 0, 2, 0, 0],
+                [0, 0, 0, 1, 1, 1],
+                [0, 0, 1, 1, 1, 2],
+                [0, 0, 1, 2, 1, 1],
+                [0, 0, 1, 1, 1, 0],
+                [1, 1, 1, 0, 0, 2],
+                [1, 1, 0, 2, 1, 1],
+                [1, 1, 1, 1, 0, 0],
+                [1, 1, 0, 0, 1, 1],
+                [1, 1, 1, 1, 0, 2],
+                [1, 1, 0, 2, 0, 2],
+                [1, 1, 0, 2, 2, 2],
+                [1, 1, 2, 2, 0, 2],
+                [1, 1, 0, 2, 0, 0],
+                [1, 1, 0, 0, 0, 0],
+                [1, 1, 0, 0, 1, 2],
+                [1, 1, 1, 2, 2, 0],
+                [1, 1, 2, 0, 2, 2],
+                [1, 1, 2, 2, 2, 2],
+                [1, 1, 2, 2, 0, 0],
+                [1, 1, 0, 0, 2, 2],
+                [0, 0, 2, 2, 1, 0],
+                [0, 0, 1, 0, 1, 0],
+                [0, 0, 1, 0, 2, 2],
+                [0, 0, 2, 2, 0, 2],
+                [0, 0, 0, 2, 2, 2],
+                [0, 0, 2, 2, 2, 0],
+                [2, 2, 2, 0, 0, 0],
+                [2, 2, 0, 0, 0, 0],
+                [2, 2, 0, 0, 2, 1],
+                [2, 2, 2, 1, 2, 1],
+                [2, 2, 2, 1, 0, 0],
+                [2, 2, 0, 0, 2, 2],
                 [2, 2, 2, 2, 0, 0],
                 [2, 2, 0, 0, 1, 1],
                 [0, 1, 1, 1, 0, 0],
@@ -170,14 +303,20 @@ export function Premover(props) {
                 [2, 2, 2, 2, 0, 0]
             ],
         ];
-
+        // store coords you want to move manually in manual and send them in with premover
+        //console.log(props.manual)
+        //if (props.manual !== '') {
+        //    console.log("attempting premove: ",props.manual)
+        //    premove(props.manual)
+        //    return;
+        //}
         // Execute moves with a delay between them
         moves[moveIndex].forEach((move, index) => {
             setTimeout(() => {
-                premove(move);
+                props.move(move);
             }, index * 300); // 500ms delay between moves
         });
-    }, [premove])
+    }, [props.move])
 
     return (
         <div style={{
@@ -185,9 +324,9 @@ export function Premover(props) {
             paddingRight: "20px",
             paddingLeft: "10px",
             backgroundColor: "#222222",
-            fontFamily: "monospace"
+            width: "70px"
         }}>
-            <h2 style={{color:"white"}}>Premover</h2>
+            <h2 style={{color: "white"}}>Premov</h2>
             <button onClick={premover.bind(this, 0)}>[0] Premove 1</button>
             <button onClick={premover.bind(this, 1)}>[1] Premove 2</button>
             <button onClick={premover.bind(this, 2)}>[2] Premove 3</button>
@@ -198,7 +337,7 @@ export function Premover(props) {
         </div>
     )}
 
-export default function Board(props) {
+export default function Moves(props) {
     const letters=['A','B','C']
     return (
         <div style={{
