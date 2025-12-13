@@ -44,13 +44,12 @@ class BoardTree {
       this.children.push(temp)
     }
   }
-
   getFullRoute(move) {
-    let route = move;
-    let current = this;
-    while (current.parent != null) {
-      route = [current.row,current.column].concat(route);
-      current = current.parent;
+    var route=move
+    var current=this
+    while (current.parent!=null) {
+      route=[current.row,current.column].concat(route)
+      current=current.parent
     }
     return route
   }
@@ -79,17 +78,13 @@ class BoardTree {
     if (this.depth>1) {
       this.children.map((row)=>{row.map((board)=>{board.setActiveStatus(shiftedRoute)})})
     }
-    // bail
-    return false;
   }
 }
 
 function checkWin(toCheck) {
   const winconditions = [[[0, 0], [0, 1], [0, 2]], [[1, 0], [1, 1], [1, 2]], [[2, 0], [2, 1], [2, 2]], [[0, 0], [1, 0], [2, 0]], [[0, 1], [1, 1], [2, 1]], [[0, 2], [1, 2], [2, 2]], [[0, 2], [1, 1], [2, 0]], [[0, 0], [1, 1], [2, 2]]]
   for (let i=0; i<winconditions.length; i++) {
-    if (toCheck.children[winconditions[i][0][0]][winconditions[i][0][1]].wonBy === toCheck.children[winconditions[i][1][0]][winconditions[i][1][1]].wonBy &&
-        toCheck.children[winconditions[i][1][0]][winconditions[i][1][1]].wonBy === toCheck.children[winconditions[i][2][0]][winconditions[i][2][1]].wonBy &&
-        toCheck.children[winconditions[i][0][0]][winconditions[i][0][1]].wonBy !== "") {
+    if (toCheck.children[winconditions[i][0][0]][winconditions[i][0][1]].wonBy==toCheck.children[winconditions[i][1][0]][winconditions[i][1][1]].wonBy&&toCheck.children[winconditions[i][1][0]][winconditions[i][1][1]].wonBy==toCheck.children[winconditions[i][2][0]][winconditions[i][2][1]].wonBy&&toCheck.children[winconditions[i][0][0]][winconditions[i][0][1]].wonBy!="") {
       return true;
     }
   }
@@ -107,10 +102,12 @@ function calculateShift(previousMove) {
 
 export default function App() {
   //'treeNode' is the board at which the click event happens
-  const dimension = 3;
+  const dimension=3;
+
+  const players=['X','O'];
   const [moveList, setMoveList] = useState([]);
-  const [currentPlayer, setCurrentPlayer] = useState('X');
-  const [boardTree, setBoardTree] = useState(new BoardTree(null, null, dimension, 0,  0));
+  const [currentPlayer, setCurrentPlayer] = useState(players[0]);
+  const [boardTree, setBoardTree] = useState(new BoardTree(null,dimension,0,0));
   const [previousMove, setPreviousMove] = useState([]);
   const [winDepth, setWinDepth] = useState(0);
   const [gameStarted, setGameStarted] = useState(false);
@@ -203,7 +200,6 @@ export default function App() {
       //this line has changed according to "new standards":
       currentBoard.children[coords[0]][coords[1]].wonBy=currentPlayer;
       winDepth++;
-      currentBoard = currentBoard.parent;
     }
 
     boardTree.setActiveStatus(calculateShift([treeNode,row,column,winDepth]))
